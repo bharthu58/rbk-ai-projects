@@ -3,25 +3,28 @@
 import {
   createContext,
   useContext,
+  useState,
   ReactNode,
   useEffect,
   useRef,
+  ChangeEvent,
+  FormEvent,
 } from "react";
 import { useChat as useAIChat } from "@ai-sdk/react";
-import { Message } from "ai";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { useFileSystem } from "./file-system-context";
 import { setHasAnonWork } from "@/lib/anon-work-tracker";
 
 interface ChatContextProps {
   projectId?: string;
-  initialMessages?: Message[];
+  initialMessages?: UIMessage[];
 }
 
 interface ChatContextType {
-  messages: Message[];
+  messages: UIMessage[];
   input: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleInputChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  handleSubmit: (e: FormEvent<HTMLFormElement>) => void;
   status: string;
 }
 
@@ -34,36 +37,54 @@ export function ChatProvider({
 }: ChatContextProps & { children: ReactNode }) {
   const { fileSystem, handleToolCall } = useFileSystem();
   const appliedToolCalls = useRef(new Set<string>());
+  const [input, setInput] = useState("");
+  const fileSystemRef = useRef(fileSystem);
+  fileSystemRef.current = fileSystem;
 
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
+    sendMessage,
     status,
   } = useAIChat({
-    api: "/api/chat",
-    initialMessages,
-    body: {
-      files: fileSystem.serialize(),
-      projectId,
-    },
+    messages: initialMessages,
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      body: () => ({
+        files: fileSystemRef.current.serialize(),
+        projectId,
+      }),
+    }),
   });
 
+  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
+
   // Apply tool calls to the client file system as they arrive in the message stream.
-  // Server-side tools with `execute` don't trigger onToolCall, so we process them here.
   useEffect(() => {
     for (const message of messages) {
       if (!message.parts) continue;
       for (const part of message.parts) {
-        if (
-          part.type === "tool-invocation" &&
-          part.toolInvocation.state !== "partial-call"
-        ) {
-          const { toolCallId, toolName, args } = part.toolInvocation;
+        const anyPart = part as any;
+        const isToolPart =
+          part.type === "dynamic-tool" ||
+          (typeof part.type === "string" && part.type.startsWith("tool-"));
+        if (isToolPart && anyPart.state !== "input-streaming") {
+          const toolCallId = anyPart.toolCallId;
           if (!appliedToolCalls.current.has(toolCallId)) {
             appliedToolCalls.current.add(toolCallId);
-            handleToolCall({ toolName, args });
+            const toolName =
+              part.type === "dynamic-tool"
+                ? anyPart.toolName
+                : part.type.slice(5);
+            handleToolCall({ toolName, args: anyPart.input });
           }
         }
       }

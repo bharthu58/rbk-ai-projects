@@ -2,22 +2,22 @@
 
 import { Loader2 } from "lucide-react";
 
-interface ToolInvocation {
+interface ToolInvocationProps {
   state: string;
-  result?: unknown;
+  output?: unknown;
   toolName: string;
-  args: Record<string, unknown>;
+  input: Record<string, unknown>;
 }
 
 interface Props {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolInvocationProps;
 }
 
-function getLabel(toolName: string, args: Record<string, unknown>): string {
-  const path = args.path as string | undefined;
+function getLabel(toolName: string, input: Record<string, unknown>): string {
+  const path = input.path as string | undefined;
 
   if (toolName === "str_replace_editor" && path) {
-    switch (args.command) {
+    switch (input.command) {
       case "create":
         return `Creating ${path}`;
       case "str_replace":
@@ -33,7 +33,7 @@ function getLabel(toolName: string, args: Record<string, unknown>): string {
   }
 
   if (toolName === "file_manager" && path) {
-    switch (args.command) {
+    switch (input.command) {
       case "rename":
         return `Renaming ${path}`;
       case "delete":
@@ -47,9 +47,9 @@ function getLabel(toolName: string, args: Record<string, unknown>): string {
 }
 
 export function ToolInvocationBadge({ toolInvocation }: Props) {
-  const { state, result, toolName, args } = toolInvocation;
-  const isDone = state === "result" && result != null;
-  const label = getLabel(toolName, args);
+  const { state, output, toolName, input } = toolInvocation;
+  const isDone = state === "output-available" && output != null;
+  const label = getLabel(toolName, input);
 
   return (
     <div className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-neutral-50 rounded-lg text-xs font-mono border border-neutral-200">

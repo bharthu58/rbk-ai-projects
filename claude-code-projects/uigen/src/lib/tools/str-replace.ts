@@ -1,3 +1,4 @@
+import { tool } from "ai";
 import { z } from "zod";
 import { VirtualFileSystem } from "@/lib/file-system";
 
@@ -12,10 +13,9 @@ const TextEditorParameters = z.object({
 });
 
 export const buildStrReplaceTool = (fileSystem: VirtualFileSystem) => {
-  return {
-    id: "str_replace_editor" as const,
-    args: {},
-    parameters: TextEditorParameters,
+  return tool({
+    description: "A text editor tool for creating and modifying files.",
+    inputSchema: TextEditorParameters,
     execute: async ({
       command,
       path,
@@ -45,5 +45,5 @@ export const buildStrReplaceTool = (fileSystem: VirtualFileSystem) => {
           return `Error: undo_edit command is not supported in this version. Use str_replace to revert changes.`;
       }
     },
-  };
+  });
 };

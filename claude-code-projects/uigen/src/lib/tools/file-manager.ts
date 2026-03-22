@@ -6,7 +6,7 @@ export function buildFileManagerTool(fileSystem: VirtualFileSystem) {
   return tool({
     description:
       'Rename or delete files or folders in the file system. Rename can be used to "move" a file. Rename will recursively create folders as required.',
-    parameters: z.object({
+    inputSchema: z.object({
       command: z
         .enum(["rename", "delete"])
         .describe("The operation to perform"),
