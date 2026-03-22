@@ -34,6 +34,7 @@ jobs:
 
       - name: Project setup
         run:
+          cd claude-code-projects/uigen/
           npm run setup
           npm run dev:daemon
 
@@ -44,7 +45,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
           custom_instructions: |
-            The project is already setup with all dependencies installed.
+            The project is under the folder claude-code-projects/uigen/. It is already setup with all dependencies installed.
             The server is already running at localhost:3000. Logs from it are being written to logs.txt. 
             If needed, you can query the db with the 'sqlite3' cli. If needed, use the mcp__playwright
             set of tools to launch a browser and interact with the app.
