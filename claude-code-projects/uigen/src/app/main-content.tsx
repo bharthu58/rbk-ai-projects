@@ -32,6 +32,7 @@ interface MainContentProps {
 
 export function MainContent({ user, project }: MainContentProps) {
   const [activeView, setActiveView] = useState<"preview" | "code">("preview");
+  const [isPanelDragging, setIsPanelDragging] = useState(false);
 
   return (
     <FileSystemProvider initialData={project?.data}>
@@ -53,7 +54,10 @@ export function MainContent({ user, project }: MainContentProps) {
               </div>
             </ResizablePanel>
 
-            <ResizableHandle className="w-[1px] bg-neutral-200 hover:bg-neutral-300 transition-colors" />
+            <ResizableHandle
+              className="w-[1px] bg-neutral-200 hover:bg-neutral-300 transition-colors"
+              onDragging={setIsPanelDragging}
+            />
 
             {/* Right Panel - Preview/Code */}
             <ResizablePanel defaultSize={65}>
@@ -77,8 +81,11 @@ export function MainContent({ user, project }: MainContentProps) {
                 {/* Content Area */}
                 <div className="flex-1 overflow-hidden bg-neutral-50">
                   {activeView === "preview" ? (
-                    <div className="h-full bg-white">
+                    <div className="relative h-full bg-white">
                       <PreviewFrame />
+                      {isPanelDragging && (
+                        <div className="absolute inset-0" />
+                      )}
                     </div>
                   ) : (
                     <ResizablePanelGroup
