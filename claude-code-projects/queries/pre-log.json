@@ -1,0 +1,12 @@
+{
+  "session_id": "85471817-364a-4fd0-9ad3-1babbc38ede8",
+  "transcript_path": "/home/bharthu/.claude/projects/-home-bharthu-repos-github-rbk-ai-projects-claude-code-projects-queries/85471817-364a-4fd0-9ad3-1babbc38ede8.jsonl",
+  "cwd": "/home/bharthu/repos/github/rbk-ai-projects/claude-code-projects/queries",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/home/bharthu/repos/github/rbk-ai-projects/claude-code-projects/queries/.env"
+  },
+  "tool_use_id": "toolu_01GjFiyGx7LpovfptCbvAU4e"
+}
