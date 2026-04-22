@@ -59,17 +59,17 @@ Report the count of pages synced.
 
 ```bash
 cd /home/bharthu/repos/github/bharthu58.github.io
-git status --short _wiki/
-git diff --stat HEAD -- _wiki/
+git status --short _wiki/ _data/wiki_graph.json
+git diff --stat HEAD -- _wiki/ _data/wiki_graph.json
 ```
 
-If there are no changes to `_wiki/`, report "No changes to publish — wiki is already up to date." and stop.
+If there are no changes to `_wiki/` or `_data/wiki_graph.json`, report "No changes to publish — wiki is already up to date." and stop.
 
 ### Step 4 — Commit
 
 ```bash
 cd /home/bharthu/repos/github/bharthu58.github.io
-git add _wiki/
+git add _wiki/ _data/wiki_graph.json
 git commit -m "wiki sync $(date +%Y-%m-%d)"
 ```
 
@@ -95,7 +95,7 @@ Report:
 ## Key Rules
 
 1. **Never run `bundle exec jekyll`** during publish — the build runs on GitHub Actions, not locally
-2. **Only commit `_wiki/`** — do not stage other files unless the user explicitly requests it
+2. **Only commit `_wiki/` and `_data/wiki_graph.json`** — do not stage other files unless the user explicitly requests it
 3. **`mise exec ruby@3.3.10 --`** prefix is only needed for local `jekyll serve` (via `run.sh`), not for sync or push
 4. **Unresolved wikilinks must be plain text** — already handled by sync-wiki.py; do not modify this behaviour
 5. **`index.md` and `log.md` are excluded** from sync — they are agent-maintenance files, not public pages
