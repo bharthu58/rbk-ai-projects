@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include "orderbook/market.h"
+#include <fstream>
 
 int main() {
     std::string filename = "data/12302019.NASDAQ_ITCH50";  // Update with actual file
@@ -15,15 +16,29 @@ int main() {
 
     Market market;
 
+    std::ofstream outputFile("imbalance.csv");
+    if (!outputFile.is_open()) {
+        std::cerr << "Failed to open output file." << std::endl;
+        return 1;
+    }
+
+    // write header.
+    outputFile << "msg_count,mid_price,imbalance\n";
+
+
+
     while (reader.readNextMessage(buffer)) {
-        if (buffer[0] == 'A') {
+        if (buffer[0] == 'A' || buffer[0] == 'E') {
             parser.parseMessage(market, buffer);
-            if (++count >= 10) break;
+
+            ++count;
+            market.printImbalance("EQNR", outputFile, count);
+
+            if (count >= 5000) break;
         }
     }
     std::cout << "Processed " << count << " messages." << std::endl;
 
-    market.printTopOfBook("ARGX");
-
+    
     return 0;
 }

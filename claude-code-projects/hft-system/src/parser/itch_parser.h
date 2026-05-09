@@ -4,6 +4,7 @@
 
 class ITCHParser {
 public:
-    Order parseAddOrder(const std::vector<char>& msg);
     void parseMessage(Market& market, const std::vector<char>& msg);
+    Order parseAddOrder(const std::vector<char>& msg);
+    Execution parseOrderExecuted(const std::vector<char>& msg);
 };

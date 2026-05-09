@@ -18,13 +18,15 @@ This is a NASDAQ ITCH 5.0 binary market data parser in C++17. The protocol spec 
 **Data flow:**
 
 ```
-ITCH binary file → FileReader → ITCHParser → stdout
+ITCH binary file → FileReader → ITCHParser → Market → OrderBook (per symbol)
 ```
 
 - `src/utils/file_reader.{h,cpp}` — Reads length-prefixed binary messages from an ITCH feed file. Each message is preceded by a 2-byte big-endian length field; `FileReader` strips it and returns the raw message body.
 - `src/utils/itch_utils.{h,cpp}` — Big-endian decode helpers (`readUint16`, `readUint32`, `readUint64`) under the `itch` namespace. Take `const char*` pointing directly to the field offset. Used by the parser via `using namespace itch`.
 - `src/parser/itch_parser.{h,cpp}` — Dispatches on the first byte (message type). Handles `'A'` (Add Order) with full field decoding; `'E'` (Order Executed) is a stub; all others fall through to a default case.
-- `src/main.cpp` — Wires the two together; filters to the first 50 `'A'` messages only.
+- `src/orderbook/order_book.{h,cpp}` — `OrderBook` per symbol; `std::map` bids/asks; `addOrder`, `printTopOfBook`.
+- `src/orderbook/market.{h,cpp}` — `Market` class; `unordered_map<string, OrderBook>`; routes orders by symbol.
+- `src/main.cpp` — Filters to first 10 `'A'` messages; calls `market.printTopOfBook("ARGX")`.
 
 **Key protocol details (ITCH 5.0):**
 - Messages are framed with a 2-byte big-endian length prefix (stripped by `FileReader` before passing to the parser).

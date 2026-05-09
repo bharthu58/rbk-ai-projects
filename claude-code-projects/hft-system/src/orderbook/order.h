@@ -9,4 +9,12 @@ struct Order {
     uint32_t shares;
     uint32_t price;
     std::string symbol;
+
+    void printOrder();
+};
+
+struct Execution {
+    uint64_t execution_id;
+    uint64_t order_id;
+    uint32_t shares;
 };

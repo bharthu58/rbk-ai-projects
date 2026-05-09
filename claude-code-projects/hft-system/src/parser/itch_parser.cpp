@@ -41,6 +41,32 @@ Order ITCHParser::parseAddOrder(const std::vector<char>& msg) {
     //           << std::endl;
 }
 
+Execution ITCHParser::parseOrderExecuted(const std::vector<char>& msg)
+{
+    int offset = 1;  // Skip message type
+    offset += 2;     // stock Locate
+    offset += 2;     // tracking number 
+    offset += 6; // timestamp
+
+    uint64_t order_id = readUint64(&msg[offset]);
+    offset += 8;
+    
+    uint32_t shares = readUint32(&msg[offset]);
+    offset += 4;
+
+    uint64_t exec_id = readUint64(&msg[offset]);
+    offset += 8;
+
+    Execution executed = {exec_id, order_id, shares};
+
+    std::cout << "EXECUTE | "
+              << " ID: " << order_id
+              << " Shares: " << shares
+              << std::endl;    
+
+    return executed;
+}
+
 void ITCHParser::parseMessage(Market& market, const std::vector<char>& msg) {
     if (msg.empty()) return;
 
@@ -49,13 +75,16 @@ void ITCHParser::parseMessage(Market& market, const std::vector<char>& msg) {
     switch (messageType) {
         case 'A': {  // Add Order
             Order order = parseAddOrder(msg);
-            market.addOrder(order.symbol, order);
+            market.addOrder(order);
             break;
         }
 
         case 'E':  // Order Executed
-            std::cout << "Order Executed message" << std::endl;
+        {
+            Execution execution = parseOrderExecuted(msg);
+            market.executeOrder(execution);
             break;
+        }
 
         default:
             std::cout << "Other message type: " << messageType << std::endl;
