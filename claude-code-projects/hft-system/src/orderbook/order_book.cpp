@@ -2,12 +2,15 @@
 #include "order.h"
 #include "utils/itch_utils.h"
 #include <iostream>
+#include <cassert>
 #include <iomanip>
 #include <algorithm>
 
 using namespace itch;
 
 void OrderBook::addOrder(const Order& order) {
+    assert(order.price > 0);
+    assert(order.side == 'B' || order.side == 'S');
     if (order.side == 'B') {
         bids_[order.price].push_back(order);
     } else {
@@ -25,7 +28,7 @@ void OrderBook::executeOrder(const Order& order) {
             [&](const Order& o) { return o.order_id == order.order_id; });
         if (it != pricelevelVector.end()) {
             it->shares -= order.shares;
-            if (it->shares <= 0) {
+            if (it->shares == 0) {
                 pricelevelVector.erase(it);
             }
             if (pricelevelVector.empty()) {
@@ -37,51 +40,29 @@ void OrderBook::executeOrder(const Order& order) {
 }
 
 
-void OrderBook::printTopOfBook() const {
-    std::cout << std::fixed << std::setprecision(4);
-    std::cout << "Top of Book:" << std::endl;
-
-    if (!bids_.empty()) {
-        auto it = bids_.rbegin();
-        std::cout << "BEST BID: $" << toPrice(it->first) << std::endl;
-    } else {
-        std::cout << "No bids." << std::endl;
-    }
-
-    if (!asks_.empty()) {
-        auto it = asks_.begin();
-        std::cout << "BEST ASK: $" << toPrice(it->first) << std::endl;
-    } else {
-        std::cout << "No asks." << std::endl;
-    }
-
-    if (!bids_.empty() && !asks_.empty()) {
-        double spread = toPrice(asks_.begin()->first) - toPrice(bids_.rbegin()->first);
-        std::cout << "SPREAD:   $" << spread << std::endl;
-    }
+void OrderBook::printTopOfBook(const std::string& symbol) const {
+    double bid = getBestBid();
+    double ask = getBestAsk();
+    std::cout << std::fixed << std::setprecision(4)
+              << symbol
+              << " | BID: " << (bid > 0.0 ? std::to_string(bid) : "---")
+              << " | ASK: " << (ask > 0.0 ? std::to_string(ask) : "---");
+    if (bid > 0.0 && ask > 0.0)
+        std::cout << " | SPREAD: " << (ask - bid);
+    std::cout << std::endl;
 }
 
-uint64_t OrderBook::computeTotalBidVolume() const
+uint64_t OrderBook::totalVolume(const std::map<uint32_t, std::vector<Order>>& side)
 {
     uint64_t total = 0;
-    for (const auto& pricelevel : bids_) {
-        for (const auto& order : pricelevel.second) {
+    for (const auto& level : side)
+        for (const auto& order : level.second)
             total += order.shares;
-        }
-    }   
     return total;
 }
 
-uint64_t OrderBook::computeTotalAskVolume() const
-{
-    uint64_t total = 0;
-    for (const auto& pricelevel : asks_) {  
-        for(const auto& order : pricelevel.second) {
-            total += order.shares;
-        }   
-    }
-    return total;
-}
+uint64_t OrderBook::computeTotalBidVolume() const { return totalVolume(bids_); }
+uint64_t OrderBook::computeTotalAskVolume() const { return totalVolume(asks_); }
 
 int64_t OrderBook::computeImbalance() const
 {

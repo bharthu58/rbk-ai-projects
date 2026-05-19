@@ -23,7 +23,7 @@ int main() {
     }
 
     // write header.
-    outputFile << "msg_count,mid_price,imbalance\n";
+    outputFile << "msg_count,mid_price,imbalance,best_bid,best_ask,spread\n";
 
 
 
@@ -32,9 +32,9 @@ int main() {
             parser.parseMessage(market, buffer);
 
             ++count;
-            market.printImbalance("EQNR", outputFile, count);
+            market.printImbalance("EQNR", outputFile, count, buffer[0]);
 
-            if (count >= 5000) break;
+            if (count >= 50000) break;
         }
     }
     std::cout << "Processed " << count << " messages." << std::endl;

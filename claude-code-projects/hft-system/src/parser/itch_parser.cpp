@@ -1,7 +1,9 @@
 #include "itch_parser.h"
 #include "utils/itch_utils.h"
-#include <iostream>
 #include <algorithm>
+#ifdef DEBUG
+#include <iostream>
+#endif
 #include "orderbook/market.h"
 
 using namespace itch;
@@ -31,14 +33,6 @@ Order ITCHParser::parseAddOrder(const std::vector<char>& msg) {
 
     Order order = {order_id, side, shares, price, stock};
     return order;
-
-    // std::cout << "ADD ORDER | "
-    //           << "ID: " << order_id
-    //           << " Side: " << side
-    //           << " Shares: " << shares
-    //           << " Price: " << price
-    //           << " Stock: " << stock
-    //           << std::endl;
 }
 
 Execution ITCHParser::parseOrderExecuted(const std::vector<char>& msg)
@@ -58,12 +52,6 @@ Execution ITCHParser::parseOrderExecuted(const std::vector<char>& msg)
     offset += 8;
 
     Execution executed = {exec_id, order_id, shares};
-
-    std::cout << "EXECUTE | "
-              << " ID: " << order_id
-              << " Shares: " << shares
-              << std::endl;    
-
     return executed;
 }
 
@@ -87,6 +75,9 @@ void ITCHParser::parseMessage(Market& market, const std::vector<char>& msg) {
         }
 
         default:
+#ifdef DEBUG
             std::cout << "Other message type: " << messageType << std::endl;
+#endif
+            break;
     }
 }

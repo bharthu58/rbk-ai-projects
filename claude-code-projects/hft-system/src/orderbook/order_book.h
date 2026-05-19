@@ -10,7 +10,7 @@ public:
     void addOrder(const Order& order);
     void executeOrder(const Order& order);
 
-    void printTopOfBook() const;
+    void printTopOfBook(const std::string& symbol) const;
     bool isBookUpdated() const { return bookUpdated; }
     void resetBookUpdated() { bookUpdated = false; }
     int64_t getLastImbalance() const { return lastImbalance_; }
@@ -22,9 +22,15 @@ public:
 
     double getBestBid() const;
     double getBestAsk() const;
-    double getMid() const { return (getBestBid() + getBestAsk()) / 2.0; }
+    double getMid() const {
+        double bid = getBestBid(), ask = getBestAsk();
+        if (bid > 0.0 && ask > 0.0) return (bid + ask) / 2.0;
+        return bid > 0.0 ? bid : ask;
+    }
     
-    private:
+private:
+    static uint64_t totalVolume(const std::map<uint32_t, std::vector<Order>>& side);
+
     std::map<uint32_t, std::vector<Order>> bids_;
     std::map<uint32_t, std::vector<Order>> asks_;
 

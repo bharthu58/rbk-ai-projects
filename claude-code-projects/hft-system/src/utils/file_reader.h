@@ -5,6 +5,7 @@
 class FileReader {
 public:
     explicit FileReader(const std::string& filename);
+    ~FileReader();
     bool readNextMessage(std::vector<char>& buffer);
 
 private:

@@ -10,6 +10,10 @@ FileReader::FileReader(const std::string& filename) : filename_(filename) {
     }
 }
 
+FileReader::~FileReader() {
+    if (file_) fclose(file_);
+}
+
 bool FileReader::readNextMessage(std::vector<char>& buffer) {
     if (!file_) return false;
 

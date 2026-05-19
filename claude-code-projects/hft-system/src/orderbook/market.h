@@ -8,7 +8,7 @@ public:
     void addOrder(const Order& order);
     void executeOrder(const Execution& execution);
     void printTopOfBook(const std::string& symbol) const;
-    void printImbalance(const std::string& symbol, std::ofstream& outputFile, int tick);
+    void printImbalance(const std::string& symbol, std::ofstream& outputFile, int tick, char msgType);
 
 
 private:
