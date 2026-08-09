@@ -1,0 +1,18 @@
+# Copy to runtime/config.yaml and fill in real values.
+# runtime/ is gitignored — the populated file must never be committed.
+
+# Absolute path to the Google Drive for Desktop sync folder that contains
+# the Claude Cowork project folders (each with Inbox/, Reports/, State/, Archive/, project.yaml).
+workspace_root: "/mnt/g/My Drive/MyAI/Claude-CoWork/Workspace"
+
+# TLS only — IMAPS (993) and SMTP over STARTTLS (587) or SMTPS (465). See DESIGN.md §3.
+smtp_host: "smtp.gmail.com"
+smtp_port: 587
+imap_host: "imap.gmail.com"
+imap_port: 993
+
+# Optional. Single shared Telegram chat every project notifies into (project name is
+# included in each message so the one chat stays legible across projects). Leave blank
+# (along with TELEGRAM_BOT_TOKEN in .env) to disable Telegram entirely — email still
+# works without it. See DESIGN.md §3.
+telegram_chat_id: ""

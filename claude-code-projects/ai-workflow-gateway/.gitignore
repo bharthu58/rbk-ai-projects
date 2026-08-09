@@ -1,0 +1,6 @@
+# Machine-local, mutable — never committed. See DESIGN.md §2.
+runtime/
+
+# Python
+__pycache__/
+*.pyc
