@@ -18,6 +18,14 @@ SOURCE   = Path("/mnt/g/My Drive/RBK-OBSIDIAN-NOTES/rbk-obsidian-vault/Agent Acc
 DEST     = Path("/home/bharthu/repos/github/bharthu58.github.io/_wiki")
 DATA_DIR = Path("/home/bharthu/repos/github/bharthu58.github.io/_data")
 SKIP     = {"index.md", "log.md"}
+# Matches wiki-config.md's index_excludes — these hold unprocessed/archived
+# sources, not finished wiki pages, and must never reach the public site.
+EXCLUDED_DIRS = {"raw", "ingested", "archive"}
+
+
+def is_excluded(path: Path, source: Path) -> bool:
+    rel_parts = path.relative_to(source).parts
+    return bool(EXCLUDED_DIRS.intersection(rel_parts))
 
 # Order matters: longer prefixes first to avoid "c-" matching "cpp-" etc.
 DOMAIN_PREFIXES = [
@@ -73,7 +81,7 @@ def build_slug_map(source: Path) -> dict[str, str]:
     """Returns {page_stem: slug}"""
     slug_map: dict[str, str] = {}
     for md in source.rglob("*.md"):
-        if md.name in SKIP:
+        if md.name in SKIP or is_excluded(md, source):
             continue
         slug_map[md.stem] = slugify(md.stem)
     return slug_map
@@ -139,7 +147,7 @@ def sync() -> None:
     count = 0
 
     for md in sorted(SOURCE.rglob("*.md")):
-        if md.name in SKIP:
+        if md.name in SKIP or is_excluded(md, SOURCE):
             continue
 
         text     = md.read_text(encoding="utf-8")
