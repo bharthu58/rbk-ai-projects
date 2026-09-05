@@ -4,12 +4,18 @@ These scripts must be run **from the Windows side** (PowerShell or Command
 Prompt on the actual Windows host) — they can't be run from inside WSL,
 since Task Scheduler is a Windows service. Pick one:
 
-- `register-task.ps1` (PowerShell, recommended — clearer to read/edit)
-- `register-task.bat` (schtasks.exe, if you'd rather not run a .ps1 script)
+- `register-task.ps1` (PowerShell, clearer to read/edit) — **note:** on this
+  machine's default execution policy, running it directly fails with
+  `PSSecurityException: UnauthorizedAccess`. Either use `register-task.bat`
+  below, or unblock/allow the script first (e.g. `Unblock-File
+  .\register-task.ps1`, or run once with
+  `powershell -ExecutionPolicy Bypass -File .\register-task.ps1`).
+- `register-task.bat` (schtasks.exe — **recommended on this machine**, confirmed
+  working where the `.ps1` hit the execution-policy error above)
 
-Both register a task named **AI Workflow Gateway** that runs every 15
-minutes, only while you're logged on (see "Open items" below), shelling
-into WSL to run the gateway in place.
+Both register a task named **AI Workflow Gateway** that runs every 12
+hours (twice daily), only while you're logged on (see "Open items" below),
+shelling into WSL to run the gateway in place.
 
 ## Steps
 
@@ -23,7 +29,7 @@ into WSL to run the gateway in place.
 5. Check `runtime/logs/gateway.log` (via `\\wsl$\Ubuntu\home\bharthu\repos\github\rbk-ai-projects\claude-code-projects\ai-workflow-gateway\runtime\logs\gateway.log`) for a normal discovery/publish/notify/reply log, same as every manual run so far.
 6. Open Task Scheduler's GUI (`taskschd.msc`) → find "AI Workflow Gateway" →
    check the "Last Run Result" column after a scheduled run happens on its
-   own (next 15-minute mark) — this is how you confirm it's really running
+   own (next 12-hour mark) — this is how you confirm it's really running
    unattended, not just when manually triggered.
 
 ## Open items (DESIGN.md's "to verify" list)

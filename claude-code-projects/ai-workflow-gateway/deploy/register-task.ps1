@@ -3,9 +3,10 @@
 #
 # Per DESIGN.md: the task shells into WSL to run the gateway in place — no
 # second Windows-native checkout, no code duplication. Runs only when logged
-# on (the conservative default — see DESIGN.md's "to verify" list) every 1
-# hour, and catches up automatically if the machine was off or asleep,
-# since the gateway's own state file (not Task Scheduler) tracks progress.
+# on (the conservative default — see DESIGN.md's "to verify" list) every 12
+# hours (twice daily), and catches up automatically if the machine was off or
+# asleep, since the gateway's own state file (not Task Scheduler) tracks
+# progress.
 
 $TaskName    = "AI Workflow Gateway"
 $WslDistro   = "Ubuntu"
@@ -21,7 +22,7 @@ $Action = New-ScheduledTaskAction -Execute "wsl.exe" `
 # range." Omitting -RepetitionDuration entirely on a -Once trigger with -RepetitionInterval
 # set is the documented way to get indefinite repetition.
 $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
-    -RepetitionInterval (New-TimeSpan -Hours 1)
+    -RepetitionInterval (New-TimeSpan -Hours 12)
 
 $Settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
