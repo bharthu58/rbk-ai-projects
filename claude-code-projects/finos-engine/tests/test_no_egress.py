@@ -26,7 +26,8 @@ SCRIPTS_DIR = Path(__file__).parent.parent / "finos"
 FIXTURES = Path(__file__).parent / "fixtures"
 
 _FORBIDDEN_MODULES = {"socket", "requests", "urllib", "http", "smtplib", "ftplib", "telnetlib"}
-_EXPECTED_MODULE_COUNT = 9  # the nine calculation modules; excludes __init__.py
+_EXPECTED_MODULE_COUNT = 13  # F2 added field_meta/registry_load/profile_v3/scenario_library
+                              # to the original nine; excludes __init__.py
 
 
 def _imported_top_level_modules(py_file: Path) -> set:

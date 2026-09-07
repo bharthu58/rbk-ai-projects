@@ -1,0 +1,53 @@
+# =============================================================================
+# SYNTHETIC TEST DATA — NOT REAL. Minimal-valid Scenario Library for F2
+# loader tests. Pairs with registry-minimal.yaml and profile-v3-minimal-*.yaml.
+# =============================================================================
+schema_version: 1
+kind: scenario_library
+
+scenarios:
+  - id: core-baseline
+    name: "Core baseline (synthetic)"
+    description: "Is the current plan viable as things stand?"
+    definition_status: APPROVED
+    assumption_set: base
+    return_path: flat
+    overrides: []
+    toggles:
+      include_social_security: false
+    expected_outcome:
+      status: APPROVED_TARGET
+      source: "synthetic fixture"
+      as_of: "2026-01-01"
+      derived_by: "User"
+      confidence: medium
+      metrics:
+        - metric: viable
+          expected: true
+          tolerance:
+            kind: exact
+          rationale: "synthetic discrete outcome"
+      reconciliation_policy: flag_only
+
+  - id: retire-earlier-adult-1
+    name: "Adult 1 retires earlier (synthetic)"
+    description: "Can adult_1 retire at 62 instead of 65?"
+    definition_status: DRAFT
+    inherits: core-baseline
+    assumption_set: base
+    overrides:
+      - target: profile
+        path: household.members[id=adult_1].retirement.target_age
+        value: 62
+        reason: "Deliberate what-if: testing an earlier retirement date than the PLANNED target_age of 65."
+      - target: parameter_binding
+        parameter_role: general_inflation
+        rebind_to:
+          assumption_id: general-inflation-base
+          version_policy: pinned
+          pinned_version: 1
+        reason: "Pin inflation explicitly for this exploratory scenario."
+    expected_outcome:
+      status: PRELIMINARY
+      source: "synthetic fixture"
+      metrics: []

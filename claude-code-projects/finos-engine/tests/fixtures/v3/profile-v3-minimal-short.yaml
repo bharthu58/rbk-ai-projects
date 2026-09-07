@@ -1,0 +1,188 @@
+# =============================================================================
+# SYNTHETIC TEST DATA — NOT REAL. Minimal-valid v3 profile, SHORT FORM.
+# Every monetary field is a bare scalar. Byte-identical in every OTHER
+# respect to profile-v3-minimal-long.yaml — the pair proves F2 criterion 3
+# (short and long Field[T] forms unwrap to an identical scalar).
+# =============================================================================
+synthetic: true
+schema_version: 3
+profile_version: 1
+profile_as_of: "2026-01-01"
+
+household:
+  members:
+    - id: adult_1
+      role: adult
+      birth_year: 1980
+      retirement:
+        target_age: 65
+        status: PLANNED
+      medicare_eligible_age: 65
+      healthcare:
+        availability:
+          employer_coverage_while_working: true
+          dependent_coverage_available_to: [adult_2]
+          retiree_coverage_available: false
+    - id: adult_2
+      role: adult
+      birth_year: 1982
+      retirement:
+        target_age: 65
+        status: PLANNED
+      medicare_eligible_age: 65
+      healthcare:
+        availability:
+          employer_coverage_while_working: false
+          retiree_coverage_available: false
+        elections:
+          - starts_at: now
+            ends_at: "retirement:adult_1"
+            elected: "dependent_of:adult_1"
+            status: PLANNED
+    - id: child_1
+      role: child
+      birth_year: 2015
+      independent_year: 2037
+      medicare_eligible_age: 65
+
+income:
+  sources:
+    - id: income_adult_1
+      owner: adult_1
+      kind: employment
+      label: "primary employment"
+      gross_annual: 150000
+      stability: stable
+      growth_parameter_role: wage_growth
+      starts_at: now
+      ends_at: "retirement:adult_1"
+
+spending:
+  totals_authority: declared
+  essential: 60000
+  lifestyle: 20000
+  discretionary: 10000
+  categories:
+    - id: mortgage_presentation
+      classification: essential
+      cash_flow_pattern: recurring
+      derived_from: "debt:mortgage_1"
+    - id: travel
+      classification: lifestyle
+      cash_flow_pattern: irregular_predictable
+      annual_amount: 5000
+      lifecycle:
+        constant: true
+
+liquid:
+  - id: operating_cash
+    label: "operating cash"
+    approx_value: 10000
+    access: immediate
+    purpose: operating
+    pool: operating
+
+investments:
+  - id: retirement_adult_1
+    label: "workplace retirement"
+    owner: adult_1
+    approx_value: 200000
+    container: traditional_401k
+    tax_character: tax_deferred
+    pool: general_retirement
+    liquidity: penalty_before_age
+    intended_purpose: retirement
+    allocation:
+      equity_pct: 80
+      fixed_income_pct: 15
+      cash_pct: 5
+      other_pct: 0
+  - id: edu_529_child_1
+    label: "529 - child_1"
+    owner: adult_1
+    approx_value: 20000
+    container: education_529
+    tax_character: tax_free
+    pool: education
+    liquidity: days
+    intended_purpose: education
+    beneficiary: child_1
+    allocation:
+      equity_pct: 50
+      fixed_income_pct: 40
+      cash_pct: 10
+      other_pct: 0
+
+debt:
+  - id: mortgage_1
+    label: "mortgage"
+    balance: 300000
+    apr_pct: 4.5
+    term_months: 360
+    months_remaining: 300
+    monthly_payment: 1800
+    payoff_date: "2050-01"
+    type: mortgage
+    fixed_or_variable: fixed
+
+contributions:
+  - id: contrib_1
+    owner: adult_1
+    account_ref: retirement_adult_1
+    contributor: employee
+    destination: pre_tax
+    mechanism: regular_deferral
+    limit_group_ref: elective_deferral
+    amount: 10000
+    starts_at: now
+    ends_at: "retirement:adult_1"
+    classification: core
+    limit_policy:
+      statutory_fact_ref: elective-deferral-limit-2026
+      limit_growth_parameter_role: wage_growth
+      contribute_to_limit: true
+    status: PLANNED
+
+education:
+  - id: college_child_1
+    beneficiary: child_1
+    start_year: 2033
+    end_year: 2037
+    annual_cost: 30000
+    cost_inflation_parameter_role: general_inflation
+    aid_offsets:
+      - kind: merit_scholarship
+        annual_amount: 5000
+        status: PLANNED
+        applies_years: all
+    funding_accounts: [edu_529_child_1]
+    funding_policy:
+      order: smoothed_non_529
+      shortfall_sources: [taxable, future_income]
+
+obligations:
+  - id: roof_replacement
+    label: "roof replacement"
+    target_year: 2032
+    estimated_total_cost: 20000
+    funding_accounts: [operating_cash]
+    flexibility: somewhat_flexible
+
+goals:
+  retirement:
+    desired_annual_spending: 80000
+
+safety_reserve:
+  target_months_of_essential: 6
+  rationale: "synthetic"
+
+tax:
+  observed_liability:
+    - tax_year: 2025
+      scope: combined_income
+      jurisdiction: US_federal
+      includes_payroll: false
+      amount: 30000
+      basis_income: 150000
+      status: ACTUAL
+      source: "synthetic filed return"

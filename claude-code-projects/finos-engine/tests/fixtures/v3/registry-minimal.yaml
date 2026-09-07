@@ -1,0 +1,62 @@
+# =============================================================================
+# SYNTHETIC TEST DATA — NOT REAL. Minimal-valid Assumption Registry for F2
+# loader tests. Deliberately small: enough roles/assumptions/sets to exercise
+# every reference check the loader performs, nothing more.
+# =============================================================================
+schema_version: 3
+kind: parameter_and_assumption_registry
+
+registry_version: 1
+registry_as_of: "2026-01-01"
+
+parameters:
+  - role: general_inflation
+    description: "General inflation rate (synthetic)"
+    units: pct_annual
+    required: true
+  - role: wage_growth
+    description: "Wage growth rate (synthetic)"
+    units: pct_annual
+    required: false
+
+statutory_facts:
+  - id: elective-deferral-limit-2026
+    kind: elective_deferral_limit
+    tax_year: 2026
+    jurisdiction: US_federal
+    value: 23500
+    units: USD
+    status: ACTUAL
+    source: "synthetic IRS notice"
+    verified_on: "2026-01-01"
+
+assumptions:
+  - id: general-inflation-base
+    version: 1
+    role: general_inflation
+    category: inflation
+    statement: "Synthetic inflation belief for testing"
+    value: 3
+    units: pct_annual
+    status: ESTIMATE
+    source: "synthetic"
+    rationale: "test fixture"
+
+assumption_sets:
+  - id: base
+    name: "Base (synthetic)"
+    description: "Synthetic base assumption set"
+    status: APPROVED
+    bindings:
+      - role: general_inflation
+        assumption_id: general-inflation-base
+        version_policy: pinned
+        pinned_version: 1
+
+return_paths:
+  - id: flat
+    description: "Flat synthetic return path"
+    applies_to: portfolio_total
+    kind: constant
+    after_sequence: revert_to_assumption_set
+    status: APPROVED

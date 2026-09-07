@@ -20,7 +20,16 @@ def test_every_loadable_fixture_declares_synthetic_true():
     failure modes, must still declare synthetic: true."""
     exempt = {"malformed-missing-synthetic-flag.yaml", "malformed-yaml-syntax.yaml"}
 
-    for fixture_path in FIXTURES.glob("*.yaml"):
+    # F2 added tests/fixtures/v3/ for the v3 loader. Its profile-shaped
+    # fixtures (profile-v3-*.yaml) carry the same `synthetic:` flag as every
+    # v2 profile fixture and are checked here too. The registry and scenario
+    # library fixtures in that directory are NOT profile-shaped — their
+    # schemas (assumption-registry.schema.yaml, scenario-library.schema.yaml)
+    # define no `synthetic` field at all — so they are out of scope for this
+    # specific check, same as the Decision Register / Open Issues schemas.
+    profile_shaped = list(FIXTURES.glob("*.yaml")) + list((FIXTURES / "v3").glob("profile-v3-*.yaml"))
+
+    for fixture_path in profile_shaped:
         if fixture_path.name in exempt:
             continue
         raw = yaml.safe_load(fixture_path.read_text())

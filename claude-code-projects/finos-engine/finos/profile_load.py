@@ -18,8 +18,10 @@ from pathlib import Path
 import yaml
 
 from .bands import UNKNOWN, Unknown
+from .profile_v3 import ProfileV3, load_profile_v3
+from .registry_load import Registry
 
-SUPPORTED_SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSION = {2, 3}
 
 _VALID_STABILITY = {"stable", "variable", "at_risk"}
 _VALID_ACCESS = {"immediate", "days", "weeks"}
@@ -50,6 +52,12 @@ class SyntheticFlagError(ProfileError):
 
 class SchemaVersionError(ProfileError):
     """`schema_version` missing or not one this engine understands."""
+
+
+class RegistryRequiredError(ProfileError):
+    """schema_version 3 requires a Registry for parameter-role and
+    statutory-fact reference validation — fail closed rather than silently
+    skip those checks when the caller omits one."""
 
 
 class ProfileValidationError(ProfileError):
@@ -420,8 +428,18 @@ def _parse_tax(raw: dict) -> TaxAssumptions:
     )
 
 
-def load_profile(path) -> Profile:
-    """Read-only. Never writes to `path` under any circumstance."""
+def load_profile(path, *, registry: "Registry | None" = None) -> "Profile | ProfileV3":
+    """Read-only. Never writes to `path` under any circumstance.
+
+    `schema_version: 2` (the only version this signature supported before
+    F2) is entirely unaffected by `registry` — that branch is byte-for-byte
+    what it was before F2, which is what keeps every existing test passing
+    unmodified. `schema_version: 3` returns a `ProfileV3` instead of a
+    `Profile` (see `finos.profile_v3` for why the two are not merged) and
+    requires `registry` for its parameter-role / statutory-fact reference
+    checks — omitting it is a fail-closed `RegistryRequiredError`, never a
+    silently weaker validation pass.
+    """
     path = Path(path)
     if not path.is_file():
         raise ProfileFileError(f"profile file not found: {path}")
@@ -449,12 +467,21 @@ def load_profile(path) -> Profile:
         raise SyntheticFlagError(f"{path}: 'synthetic' must be a boolean, got {synthetic!r}")
 
     schema_version = raw.get("schema_version")
-    if schema_version != SUPPORTED_SCHEMA_VERSION:
+    if schema_version not in SUPPORTED_SCHEMA_VERSION:
         raise SchemaVersionError(
             f"{path}: unsupported schema_version {schema_version!r} "
-            f"(this engine supports {SUPPORTED_SCHEMA_VERSION}) — blocks every decision until resolved"
+            f"(this engine supports {sorted(SUPPORTED_SCHEMA_VERSION)}) — blocks every decision until resolved"
         )
 
+    if schema_version == 3:
+        if registry is None:
+            raise RegistryRequiredError(
+                f"{path}: schema_version 3 profiles require a Registry — pass registry=load_registry(...)"
+            )
+        return load_profile_v3(raw, path, registry=registry)
+
+    # schema_version == 2 — unchanged from here down (F2 §4.2 requirement:
+    # this path is byte-for-byte identical to the pre-F2 v2 loader).
     household = _parse_household(raw.get("household") or {})
     income_sources, income_net = _parse_income(raw.get("income") or {})
     spending = _parse_spending(raw.get("spending") or {})
