@@ -108,6 +108,7 @@ class Scenario:
 class ScenarioLibrary:
     schema_version: int
     scenarios: "dict[str, Scenario]"
+    profile_path_validation: str  # "resolved" | "syntax_only" — see load_scenario_library
 
 
 def _require(mapping: dict, key: str, *, where: str):
@@ -256,7 +257,17 @@ def load_scenario_library(path, *, registry: Registry, profile_raw: "dict | None
     """Read-only. `profile_raw` is the RAW parsed profile mapping (not
     `ProfileV3`) — when supplied, `target: profile` override paths are
     resolved against it; when omitted, path syntax is still validated but
-    not resolved (a documented choice, not a silent pass)."""
+    NOT resolved.
+
+    A successful load says nothing on its own about which of those two
+    happened — that is exactly the vacuous-green shape this engine treats as
+    a defect elsewhere (a skipped privacy control reporting success while
+    checking nothing). The returned `ScenarioLibrary.profile_path_validation`
+    makes the two cases distinguishable: `"resolved"` when every
+    `target: profile` path was checked against a real profile,
+    `"syntax_only"` when it was not. A caller that needs the stronger
+    guarantee must check this field rather than infer it from "the load
+    didn't raise.\""""
     path = Path(path)
     if not path.is_file():
         raise ScenarioLibraryFormatError(f"scenario library file not found: {path}")
@@ -308,4 +319,7 @@ def load_scenario_library(path, *, registry: Registry, profile_raw: "dict | None
             source=s.get("source"), notes=s.get("notes"),
         )
 
-    return ScenarioLibrary(schema_version=raw.get("schema_version", 1), scenarios=scenarios)
+    return ScenarioLibrary(
+        schema_version=raw.get("schema_version", 1), scenarios=scenarios,
+        profile_path_validation="resolved" if profile_raw is not None else "syntax_only",
+    )

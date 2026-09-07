@@ -50,6 +50,21 @@ def test_minimal_valid_scenario_library_loads():
     assert library.scenarios["core-baseline"].expected_outcome.status == "APPROVED_TARGET"
 
 
+def test_profile_path_validation_is_syntax_only_when_no_profile_supplied():
+    """A caller must be able to tell 'paths were resolved against a real
+    profile' apart from 'paths were only syntax-checked' from the returned
+    object alone — not by inferring it from the load having succeeded."""
+    library = load_scenario_library(FIXTURES / "scenario-library-minimal.yaml", registry=_registry())
+    assert library.profile_path_validation == "syntax_only"
+
+
+def test_profile_path_validation_is_resolved_when_profile_supplied():
+    library = load_scenario_library(
+        FIXTURES / "scenario-library-minimal.yaml", registry=_registry(), profile_raw=_profile_raw(),
+    )
+    assert library.profile_path_validation == "resolved"
+
+
 def test_override_path_resolves_against_a_supplied_profile():
     library = load_scenario_library(
         FIXTURES / "scenario-library-minimal.yaml", registry=_registry(), profile_raw=_profile_raw(),
