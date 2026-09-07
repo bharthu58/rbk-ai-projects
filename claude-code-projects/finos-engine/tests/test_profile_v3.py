@@ -100,6 +100,17 @@ def test_criterion_4_projected_nominal_rejected_in_profile_context(tmp_path):
         load_profile(_write(tmp_path, data), registry=_registry())
 
 
+def test_criterion_4_current_run_rate_nominal_is_accepted_on_income():
+    """Positive control: a salary correctly declared current_run_rate_nominal
+    (the class §4 of the Model Spec reserves for a current annualized rate,
+    as opposed to a balance) loads and unwraps, with the class recorded in
+    field_meta — not just accepted in the abstract at the field_meta unit
+    level (test_field_meta.py), but in its actual schema position."""
+    profile = load_profile(FIXTURES / "profile-v3-minimal-long.yaml", registry=_registry())
+    assert profile.income_sources[0].gross_annual == 150000
+    assert profile.field_meta["income.sources[0].gross_annual"].dollar_class == "current_run_rate_nominal"
+
+
 # --------------------------------------------------------------------------
 # Criterion 5 — typed reference resolution (lifecycle events, parameter
 # roles, statutory facts)
@@ -123,6 +134,23 @@ def test_criterion_5_dangling_parameter_role_fails_closed(tmp_path):
 def test_criterion_5_dangling_statutory_fact_ref_fails_closed(tmp_path):
     data = _minimal_short()
     data["contributions"][0]["limit_policy"]["statutory_fact_ref"] = "made-up-fact"
+    with pytest.raises(ProfileV3ReferenceError):
+        load_profile(_write(tmp_path, data), registry=_registry())
+
+
+def test_criterion_5_dangling_debt_reference_fails_closed(tmp_path):
+    """`debt_payoff:<debt_id>` — the typed event a spending category (e.g. a
+    mortgage line) uses to end when a debt is paid off."""
+    data = _minimal_short()
+    data["spending"]["categories"][1]["lifecycle"]["ends_at"] = "debt_payoff:does_not_exist"
+    with pytest.raises(ProfileV3ReferenceError):
+        load_profile(_write(tmp_path, data), registry=_registry())
+
+
+def test_criterion_5_dangling_education_reference_fails_closed(tmp_path):
+    """`education_start:<education_id>` / `education_end:<education_id>`."""
+    data = _minimal_short()
+    data["contributions"][0]["starts_at"] = "education_start:does_not_exist"
     with pytest.raises(ProfileV3ReferenceError):
         load_profile(_write(tmp_path, data), registry=_registry())
 
@@ -208,6 +236,20 @@ def test_criterion_9_formula_income_source_ref_dangling_is_rejected(tmp_path):
     del data["contributions"][0]["amount"]
     data["contributions"][0]["formula"] = {"kind": "pct_of_income", "pct": 5, "income_source_ref": "no_such_income"}
     with pytest.raises(ProfileV3ReferenceError):
+        load_profile(_write(tmp_path, data), registry=_registry())
+
+
+def test_criterion_9_invalid_limit_group_ref_is_rejected(tmp_path):
+    """limit-group syntax: `limit_group_ref` is a fixed enum (`elective_deferral
+    | section_415c | catch_up | hsa | none`), recorded now so statutory limits
+    can be applied correctly later without a schema redesign — an unrecognized
+    value must fail closed rather than silently group against nothing.
+    (`plan_ref`, by contrast, is free-text per the schema — a plan identifier,
+    not a resolvable reference — so there is nothing to validate it against;
+    no rejection test applies to it.)"""
+    data = _minimal_short()
+    data["contributions"][0]["limit_group_ref"] = "not_a_real_limit_group"
+    with pytest.raises(ProfileV3ValidationError):
         load_profile(_write(tmp_path, data), registry=_registry())
 
 
