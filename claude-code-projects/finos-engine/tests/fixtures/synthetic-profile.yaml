@@ -1,0 +1,173 @@
+# =============================================================================
+# SYNTHETIC TEST DATA — NOT REAL. DO NOT COPY REAL FIGURES INTO THIS FILE.
+# =============================================================================
+#
+# Fictional household. Deliberately distinctive round numbers chosen so this
+# can never be mistaken for, or reverse-engineered toward, a real profile.
+# Used only by financial-os/tests/. See Phase 3B-4 SPEC in aoe-gateway/State.md.
+#
+# Interesting cases deliberately built into these numbers (SPEC "Synthetic
+# test data" section):
+#   - UNDERFUNDED RESERVE: held (liquid immediate/days = $22,000) < required
+#     (6mo x essential/12 = $30,000).
+#   - UNDERFUNDED NEAR-TERM OBLIGATION: "college - kiddo_1" gap = $95,000,
+#     4 years out (as-of 2026), flexibility: fixed.
+#   - NEGATIVE SURPLUS: available capital does not cover reserve + near-term
+#     obligation gap + operating cash.
+#   - NEED-FOR-RISK vs RISK-CAPACITY MISMATCH: "near-term house-repair fund"
+#     is purposed near_term_need (money that must be there soon) but is 85%
+#     equity — aggressive allocation for money with near-zero risk capacity.
+#   - AT LEAST ONE UNKNOWN FIELD: income.sources[1].growth_assumption_pct and
+#     income.net_annual_estimate are both genuinely unknown, not zero.
+# =============================================================================
+
+synthetic: true
+schema_version: 2
+
+household:
+  members:
+    - role: adult_1
+      age: 45
+      target_retirement_age: 65
+    - role: adult_2
+      age: 44
+      target_retirement_age: 65
+    - role: child_1
+      age: 14
+
+income:
+  sources:
+    - label: "primary employment"
+      gross_annual: 145000
+      stability: stable
+      growth_assumption_pct: 3
+    - label: "secondary employment"
+      gross_annual: 95000
+      stability: variable
+      # growth_assumption_pct deliberately omitted -> Unknown
+  # net_annual_estimate deliberately omitted -> Unknown
+
+spending:
+  annual_total: 96000
+  essential: 60000
+  lifestyle: 24000
+  discretionary: 12000
+  notes: "synthetic household, sums cleanly for the happy-path lifestyle case"
+
+liquid:
+  - label: "operating cash"
+    approx_value: 10000
+    access: immediate
+    purpose: operating
+  - label: "emergency reserve"
+    approx_value: 12000
+    access: immediate
+    purpose: safety_reserve
+
+investments:
+  - label: "workplace retirement - adult_1"
+    approx_value: 220000
+    tax_treatment: tax_deferred
+    liquidity: penalty_before_age
+    intended_purpose: retirement
+    allocation:
+      equity_pct: 80
+      fixed_income_pct: 15
+      cash_pct: 5
+      other_pct: 0
+  - label: "workplace retirement - adult_2"
+    approx_value: 150000
+    tax_treatment: tax_deferred
+    liquidity: penalty_before_age
+    intended_purpose: retirement
+    allocation:
+      equity_pct: 70
+      fixed_income_pct: 25
+      cash_pct: 5
+      other_pct: 0
+  - label: "taxable brokerage"
+    approx_value: 40000
+    tax_treatment: taxable
+    liquidity: immediate
+    intended_purpose: long_term_surplus
+    allocation:
+      equity_pct: 60
+      fixed_income_pct: 30
+      cash_pct: 10
+      other_pct: 0
+  - label: "529 - child_1"
+    approx_value: 25000
+    tax_treatment: education_529
+    liquidity: days
+    intended_purpose: education
+    allocation:
+      equity_pct: 50
+      fixed_income_pct: 40
+      cash_pct: 10
+      other_pct: 0
+  - label: "near-term house-repair fund"
+    approx_value: 15000
+    tax_treatment: taxable
+    liquidity: immediate
+    intended_purpose: near_term_need
+    allocation:
+      equity_pct: 85
+      fixed_income_pct: 10
+      cash_pct: 5
+      other_pct: 0
+
+debt:
+  - label: "auto loan"
+    balance: 28000
+    apr_pct: 5.9
+    term_months: 60
+    months_remaining: 42
+    monthly_payment: 540
+    type: auto
+    fixed_or_variable: fixed
+    prepayment_penalty: none
+
+obligations:
+  - label: "college - child_1"
+    target_year: 2030
+    estimated_total_cost: 120000
+    already_funded: 25000
+    funding_source: "529"
+    flexibility: fixed
+  - label: "kitchen renovation"
+    target_year: 2033
+    estimated_total_cost: 40000
+    already_funded: 15000
+    funding_source: taxable
+    flexibility: somewhat_flexible
+
+goals:
+  retirement:
+    target_age_adult_1: 65
+    target_age_adult_2: 65
+    desired_annual_spending: 90000
+    social_security_estimate_annual: 40000
+    other_retirement_income: 0
+
+safety_reserve:
+  target_months_of_essential: 6
+  rationale: "synthetic: one variable-income source in the household"
+
+scenarios:
+  base:
+    equity_return_pct: 7
+    fixed_income_return_pct: 4
+    inflation_pct: 3
+    income_continues: true
+    longevity_age: 90
+  reasonable_downside:
+    equity_return_pct: 4
+    fixed_income_return_pct: 3
+    inflation_pct: 4
+    income_continues: reduced
+    longevity_age: 95
+
+tax:
+  marginal_federal_pct: "24"
+  marginal_state_pct: "6"
+  capital_gains_pct: "15"

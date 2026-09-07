@@ -1,0 +1,33 @@
+# SYNTHETIC TEST DATA — NOT REAL. Nonsensical negative age for profile_load
+# fail-closed testing.
+synthetic: true
+schema_version: 2
+household:
+  members:
+    - role: adult_1
+      age: -5
+income:
+  sources:
+    - label: "job"
+      gross_annual: 100000
+      stability: stable
+spending:
+  annual_total: 80000
+  essential: 50000
+  lifestyle: 20000
+  discretionary: 10000
+safety_reserve:
+  target_months_of_essential: 6
+scenarios:
+  base:
+    equity_return_pct: 7
+    fixed_income_return_pct: 4
+    inflation_pct: 3
+    income_continues: true
+    longevity_age: 90
+  reasonable_downside:
+    equity_return_pct: 4
+    fixed_income_return_pct: 3
+    inflation_pct: 4
+    income_continues: true
+    longevity_age: 95

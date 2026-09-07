@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "finos-engine"
+version = "0.1.0"
+description = "FinOS deterministic financial-planning calculation engine"
+requires-python = ">=3.11"
+dependencies = ["pyyaml"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["finos"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

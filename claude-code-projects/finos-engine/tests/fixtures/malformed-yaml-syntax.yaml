@@ -1,0 +1,11 @@
+# SYNTHETIC TEST DATA — NOT REAL. Deliberately broken YAML syntax for
+# profile_load fail-closed testing.
+synthetic: true
+schema_version: 2
+household:
+  members:
+    - role: adult_1
+      age: 45
+    unbalanced: [this list never closes
+spending:
+  annual_total: 90000

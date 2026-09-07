@@ -1,0 +1,90 @@
+# =============================================================================
+# SYNTHETIC TEST DATA — NOT REAL. DO NOT COPY REAL FIGURES INTO THIS FILE.
+# =============================================================================
+# Phase 3B-5, Scenario E (contribution unknown) — identical to
+# scenario-e-contribution-present.yaml except annual_contribution is omitted
+# (Unknown). Pair the two to prove the verdict flips from shortfall (here) to
+# on_track (with the contribution declared).
+# =============================================================================
+
+synthetic: true
+schema_version: 2
+
+household:
+  members:
+    - role: adult_1
+      age: 50
+      target_retirement_age: 65
+
+income:
+  sources:
+    - label: "employment"
+      gross_annual: 150000
+      stability: stable
+
+spending:
+  annual_total: 65000
+  essential: 40000
+  lifestyle: 18000
+  discretionary: 7000
+
+liquid:
+  - label: "operating cash"
+    approx_value: 5000
+    access: immediate
+    purpose: operating
+  - label: "emergency reserve"
+    approx_value: 12000
+    access: immediate
+    purpose: safety_reserve
+
+investments:
+  - label: "small ira"
+    approx_value: 50000
+    tax_treatment: tax_deferred
+    liquidity: penalty_before_age
+    intended_purpose: retirement
+    allocation:
+      equity_pct: 60
+      fixed_income_pct: 40
+  - label: "brokerage"
+    approx_value: 60000
+    tax_treatment: taxable
+    liquidity: immediate
+    intended_purpose: long_term_surplus
+    allocation:
+      equity_pct: 60
+      fixed_income_pct: 40
+
+obligations:
+  - label: "car replacement fund"
+    target_year: 2030
+    estimated_total_cost: 8000
+    already_funded: 10000
+    funding_source: taxable
+    flexibility: flexible
+
+safety_reserve:
+  target_months_of_essential: 3
+
+goals:
+  retirement:
+    target_age_adult_1: 65
+    desired_annual_spending: 70000
+    social_security_estimate_annual: 30000
+    other_retirement_income: 10000
+    # annual_contribution deliberately omitted -> Unknown
+
+scenarios:
+  base:
+    equity_return_pct: 7
+    fixed_income_return_pct: 4
+    inflation_pct: 3
+    income_continues: true
+    longevity_age: 90
+  reasonable_downside:
+    equity_return_pct: 4
+    fixed_income_return_pct: 3
+    inflation_pct: 4
+    income_continues: true
+    longevity_age: 95

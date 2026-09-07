@@ -1,0 +1,96 @@
+# =============================================================================
+# SYNTHETIC TEST DATA — NOT REAL. DO NOT COPY REAL FIGURES INTO THIS FILE.
+# =============================================================================
+# Built for Phase 3B-4a T6-T8 (unclassified liquid/investment classification,
+# C2/C4). Deliberately fictional, distinctive numbers.
+#
+#   liquid[0] "emergency fund"     -> DECLARED purpose='operating' overrides
+#                                      the label's own SAFETY_RESERVE keyword
+#                                      match ("emergency") -> T6 (declared wins).
+#   liquid[1] "misc savings account" -> declared purpose='rainy_day', NOT a
+#                                      recognized value -> UNCLASSIFIED + warning
+#                                      (T6, second half).
+#   liquid[2] "misc account"       -> no declared purpose, no keyword match ->
+#                                      UNCLASSIFIED, NOT operating cash, excluded
+#                                      from available capital, warning surfaces
+#                                      in SurplusResult.classification_warnings (T7).
+#   investments[0] "mystery fund"  -> intended_purpose='someday_maybe', not
+#                                      recognized -> UNCLASSIFIED in buckets AND
+#                                      excluded from surplus — the two agree (T8).
+# =============================================================================
+
+synthetic: true
+schema_version: 2
+
+household:
+  members:
+    - role: adult_1
+      age: 40
+      target_retirement_age: 65
+
+income:
+  sources:
+    - label: "employment"
+      gross_annual: 110000
+      stability: stable
+
+spending:
+  annual_total: 70000
+  essential: 45000
+  lifestyle: 17000
+  discretionary: 8000
+
+liquid:
+  - label: "emergency fund"
+    approx_value: 15000
+    access: immediate
+    purpose: operating
+  - label: "misc savings account"
+    approx_value: 8000
+    access: immediate
+    purpose: rainy_day
+  - label: "misc account"
+    approx_value: 5000
+    access: immediate
+
+investments:
+  - label: "mystery fund"
+    approx_value: 20000
+    tax_treatment: taxable
+    liquidity: immediate
+    intended_purpose: someday_maybe
+    allocation:
+      equity_pct: 50
+      fixed_income_pct: 50
+  - label: "401k"
+    approx_value: 300000
+    tax_treatment: tax_deferred
+    liquidity: penalty_before_age
+    intended_purpose: retirement
+    allocation:
+      equity_pct: 60
+      fixed_income_pct: 40
+
+safety_reserve:
+  target_months_of_essential: 3
+
+goals:
+  retirement:
+    target_age_adult_1: 65
+    desired_annual_spending: 55000
+    social_security_estimate_annual: 25000
+    other_retirement_income: 0
+
+scenarios:
+  base:
+    equity_return_pct: 7
+    fixed_income_return_pct: 4
+    inflation_pct: 3
+    income_continues: true
+    longevity_age: 90
+  reasonable_downside:
+    equity_return_pct: 4
+    fixed_income_return_pct: 3
+    inflation_pct: 4
+    income_continues: true
+    longevity_age: 95
