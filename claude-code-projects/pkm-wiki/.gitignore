@@ -4,8 +4,6 @@
 cookies.json
 # spotipy OAuth token cache (Bearer access token)
 .cache
-# hardcodes Spotify client credentials — parameterize via env before tracking
-tools/run_podcast.sh
 
 # Browser / session state
 .browser_profile/

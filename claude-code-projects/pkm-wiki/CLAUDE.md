@@ -162,9 +162,12 @@ Resolves a Spotify podcast episode to audio, transcribes it, and writes a struct
 **Setup:**
 ```bash
 pip install -r tools/podcast_ingest/requirements.txt
-# Spotify credentials are already set in run_podcast.sh
-# OPENAI_API_KEY only needed if Whisper audio fallback triggers
+export SPOTIFY_CLIENT_ID=...       # required — run_podcast.sh exits if unset
+export SPOTIFY_CLIENT_SECRET=...   # required
+export OPENAI_API_KEY=...          # optional — only if Whisper audio fallback triggers
 ```
+
+**Env vars:** `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` (required); `OPENAI_API_KEY` (optional). Never hardcode them in `run_podcast.sh` — it is tracked in a public repo.
 
 **Usage:**
 ```bash
