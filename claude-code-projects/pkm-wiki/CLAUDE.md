@@ -12,7 +12,19 @@ This repo contains:
 - `raw/` — drop zone for source files awaiting ingestion
 - `ingested/` — archive of processed source files
 - `archive/` — deprecated pages and lint reports
-- `wiki-config.md` — single config file read by all five skills
+- `wiki-config.md` — single config file read by all five skills (machine-local, git-ignored; template: `wiki-config.example.md`)
+
+## Runtime data and Git
+
+`raw/`, `ingested/` and `archive/` are git-ignored. **Ignored is not backed up.**
+
+| Path | Role | Disposable? |
+|---|---|---|
+| `raw/` | Staging — transient workflow input awaiting `/wiki-ingest` | Yes, once ingested |
+| `ingested/` | **Durable provenance/source archive** — wiki `changes:` fields point here; it is the filesystem truth for what has been processed | **No** — excluded from public Git for privacy, so it needs a separate backup/preservation policy (not yet in place) |
+| `archive/` | Generated operational output (lint reports, deprecated artifacts) | Regenerable |
+
+`tools/medium_ingest/ingested-index.html` is generated output and also ignored.
 
 ## Agent access boundary
 
@@ -73,6 +85,14 @@ Agent Access/rbk-pkm-wiki/    ← ALL wiki pages live here (vault path)
 ```
 
 ### How `wiki-config.md` works
+
+`wiki-config.md` is **machine-local and git-ignored**. On a new machine, copy the tracked template and set the two absolute paths:
+
+```bash
+cp wiki-config.example.md wiki-config.md   # then edit wiki_root / staging_root
+```
+
+Nothing tracked depends on a specific machine path — the skills and tools locate `wiki-config.md` by filename.
 
 All five skills search for `wiki-config.md` by filename. It contains:
 - `wiki_root` — absolute path to the Obsidian vault wiki folder (final wiki pages, index.md, log.md)

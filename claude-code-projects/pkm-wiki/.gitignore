@@ -19,3 +19,15 @@ raw/.medium_cache.json
 
 # Local settings
 .claude/settings.local.json
+
+# Machine-local runtime config — copy wiki-config.example.md to create it
+/wiki-config.md
+
+# Runtime / provenance data — NOT committed. Ignored != backed up:
+# ingested/ is durable provenance and needs its own backup (see CLAUDE.md).
+/raw/
+/ingested/
+/archive/
+
+# Generated output
+/tools/medium_ingest/ingested-index.html
