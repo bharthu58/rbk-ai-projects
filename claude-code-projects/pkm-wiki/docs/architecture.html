@@ -1,0 +1,422 @@
+<title>PKM Wiki — System Architecture</title>
+<style>
+  :root {
+    --bg: #F5F6F8;
+    --surface: #FFFFFF;
+    --surface-2: #ECEEF1;
+    --border: #D7DAE0;
+    --text: #1B1E24;
+    --text-muted: #5B6270;
+    --accent: #0E7C86;
+    --risk: #B7791F;
+    --fixed: #3F7D52;
+    --mono-bg: #E9ECEF;
+    --font-sans: ui-sans-serif, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161B;
+      --surface: #1C1F26;
+      --surface-2: #20242C;
+      --border: #2E323C;
+      --text: #E7E9ED;
+      --text-muted: #9AA1AE;
+      --accent: #4DD0DE;
+      --risk: #E3A93F;
+      --fixed: #6FBF86;
+      --mono-bg: #262A33;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161B;
+    --surface: #1C1F26;
+    --surface-2: #20242C;
+    --border: #2E323C;
+    --text: #E7E9ED;
+    --text-muted: #9AA1AE;
+    --accent: #4DD0DE;
+    --risk: #E3A93F;
+    --fixed: #6FBF86;
+    --mono-bg: #262A33;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  header { display: flex; flex-direction: column; gap: 8px; }
+  h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 62ch;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .meta-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .meta-row strong { color: var(--text); font-weight: 600; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 14px; }
+  .diagram-wrap { overflow-x: auto; }
+  svg { max-width: 100%; height: auto; display: block; }
+  figcaption {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-width: 68ch;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 12px; height: 3px; border-radius: 1px; flex: none; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  footer code {
+    font-family: var(--font-mono);
+    background: var(--mono-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.78rem;
+  }
+
+  /* SVG element styles */
+  .node-rect { fill: var(--surface); stroke: var(--border); stroke-width: 1; }
+  .box-rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.2; }
+  .node-title { fill: var(--text); font: 700 13px var(--font-sans); }
+  .node-title-sm { fill: var(--text); font: 700 12px var(--font-sans); }
+  .node-sub { fill: var(--text-muted); font: 400 11px var(--font-sans); }
+  .box-header { fill: var(--text); font: 700 13.5px var(--font-sans); }
+  .box-subhead { fill: var(--text-muted); font: 400 11px var(--font-sans); }
+  .mono-chip-bg { fill: var(--mono-bg); }
+  .mono-chip-text { fill: var(--text); font: 500 11px var(--font-mono); }
+  .stage-label { fill: var(--text-muted); font: 700 11px var(--font-sans); letter-spacing: 1.6px; }
+  .flow-line { stroke: var(--accent); stroke-width: 2; fill: none; }
+  .flow-label { fill: var(--accent); font: 600 10.5px var(--font-sans); }
+  .side-line { stroke: var(--text-muted); stroke-width: 1.4; stroke-dasharray: 4 3; fill: none; }
+  .side-label { fill: var(--text-muted); font: 500 10px var(--font-sans); font-style: italic; }
+  .divider { stroke: var(--border); stroke-width: 1; }
+  .chip-rect { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+  .chip-text { fill: var(--text); font: 600 10.5px var(--font-sans); }
+  .tag-pill { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+  .tag-text { fill: var(--text-muted); font: 500 9px var(--font-sans); }
+
+  .note-card { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+  .note-bar-fixed { fill: var(--fixed); }
+  .note-bar-risk { fill: var(--risk); }
+  .note-bar-info { fill: var(--text-muted); }
+  .note-title-fixed { fill: var(--fixed); font: 700 10px var(--font-sans); letter-spacing: 0.6px; }
+  .note-title-risk { fill: var(--risk); font: 700 10px var(--font-sans); letter-spacing: 0.6px; }
+  .note-title-info { fill: var(--text-muted); font: 700 10px var(--font-sans); letter-spacing: 0.6px; }
+  .note-text { fill: var(--text); font: 400 10.5px var(--font-sans); }
+
+  .terminus-rect { fill: var(--accent); stroke: none; }
+  .terminus-text { fill: var(--bg); font: 700 13px var(--font-sans); }
+  .terminus-sub { fill: var(--bg); font: 400 11px var(--font-sans); opacity: 0.9; }
+
+  .marker-accent-fill { fill: var(--accent); }
+  .marker-muted-fill { fill: var(--text-muted); }
+</style>
+
+<header>
+  <h1>PKM Wiki — System Architecture</h1>
+  <p class="subtitle">How a note gets from your phone, a Medium article, or a podcast to the public wiki at bharthu58.github.io — and the one place it can currently leak.</p>
+  <div class="meta-row">
+    <span><strong>staging_root</strong> — agent repo (WSL)</span>
+    <span><strong>wiki_root</strong> — Obsidian vault (Google Drive)</span>
+    <span>Reflects state as of <strong>2026-09-01</strong></span>
+  </div>
+</header>
+
+<figure>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 1040 1110" role="img" aria-label="Pipeline diagram: three capture sources feed two separate raw/ queues, which wiki-ingest scans and synthesizes into wiki pages in the Obsidian vault; wiki-publish then converts and pushes those pages to the live public site. Side notes mark a fixed dual-queue bug and an open risk that the publish step has no exclusion for private content.">
+      <defs>
+        <marker id="arrow-accent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="marker-accent-fill" d="M0,0 L10,5 L0,10 z" />
+        </marker>
+        <marker id="arrow-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path class="marker-muted-fill" d="M0,0 L10,5 L0,10 z" />
+        </marker>
+      </defs>
+
+      <!-- ============ STAGE 1: CAPTURE SOURCES ============ -->
+      <text class="stage-label" x="20" y="34">CAPTURE SOURCES</text>
+
+      <!-- Card 1: Medium -->
+      <rect class="node-rect" x="20" y="46" width="242" height="92" rx="3"/>
+      <text class="node-title" x="34" y="68">Medium articles</text>
+      <rect class="mono-chip-bg" x="34" y="76" width="98" height="16" rx="2"/>
+      <text class="mono-chip-text" x="40" y="88">run_medium.sh</text>
+      <text class="node-sub" x="34" y="110">Playwright scrape +</text>
+      <text class="node-sub" x="34" y="124">LLM structuring</text>
+
+      <!-- Card 2: Podcast -->
+      <rect class="node-rect" x="278" y="46" width="242" height="92" rx="3"/>
+      <text class="node-title" x="292" y="68">Podcast episode</text>
+      <rect class="mono-chip-bg" x="292" y="76" width="104" height="16" rx="2"/>
+      <text class="mono-chip-text" x="298" y="88">run_podcast.sh</text>
+      <text class="node-sub" x="292" y="110">Spotify → resolve →</text>
+      <text class="node-sub" x="292" y="124">transcribe (yt-dlp/Whisper)</text>
+
+      <!-- Card 3: iPhone -->
+      <rect class="node-rect" x="536" y="46" width="244" height="92" rx="3"/>
+      <text class="node-title" x="550" y="68">iPhone (Obsidian mobile)</text>
+      <rect class="mono-chip-bg" x="550" y="76" width="150" height="16" rx="2"/>
+      <text class="mono-chip-text" x="556" y="88">sync-icloud-inbox.ps1</text>
+      <text class="node-sub" x="550" y="110">iCloud sync → Task</text>
+      <text class="node-sub" x="550" y="124">Scheduler, daily 9am</text>
+
+      <!-- arrows row1 -> row2 -->
+      <line class="flow-line" x1="141" y1="138" x2="141" y2="176" marker-end="url(#arrow-accent)"/>
+      <line class="flow-line" x1="399" y1="138" x2="300" y2="176" marker-end="url(#arrow-accent)"/>
+      <line class="flow-line" x1="658" y1="138" x2="594" y2="176" marker-end="url(#arrow-accent)"/>
+
+      <!-- ============ STAGE 2: RAW QUEUES ============ -->
+      <text class="stage-label" x="20" y="164">RAW/ — TWO LOCATIONS FEED ONE QUEUE</text>
+
+      <!-- Card A: staging_root/raw -->
+      <rect class="node-rect" x="20" y="176" width="372" height="100" rx="3"/>
+      <rect class="mono-chip-bg" x="34" y="188" width="164" height="18" rx="2"/>
+      <text class="mono-chip-text" x="40" y="201">staging_root/raw/</text>
+      <text class="node-sub" x="34" y="226">Agent repo, WSL filesystem</text>
+      <text class="node-sub" x="34" y="242">Receives Medium + podcast output</text>
+      <text class="node-sub" x="34" y="258">.medium_cache.json — dedup by URL</text>
+
+      <!-- Card B: wiki_root/raw -->
+      <rect class="node-rect" x="408" y="176" width="372" height="100" rx="3"/>
+      <rect class="mono-chip-bg" x="422" y="188" width="148" height="18" rx="2"/>
+      <text class="mono-chip-text" x="428" y="201">wiki_root/raw/</text>
+      <text class="node-sub" x="422" y="226">Obsidian vault, Google Drive</text>
+      <text class="node-sub" x="422" y="242">Receives iPhone captures</text>
+      <text class="node-sub" x="422" y="258">Timestamp-prefixed on arrival</text>
+
+      <!-- right note 1: FIXED -->
+      <rect class="note-card" x="800" y="176" width="220" height="92" rx="3"/>
+      <rect class="note-bar-fixed" x="800" y="176" width="4" height="92"/>
+      <text class="note-title-fixed" x="816" y="194">FIXED · 2026-09-01</text>
+      <text class="note-text" x="816" y="212">wiki-ingest previously scanned</text>
+      <text class="note-text" x="816" y="226">staging_root/raw/ only — captures</text>
+      <text class="note-text" x="816" y="240">in wiki_root/raw/ sat unprocessed</text>
+      <text class="note-text" x="816" y="254">indefinitely. Now scans both.</text>
+
+      <!-- arrows row2 -> stage3 -->
+      <line class="flow-line" x1="206" y1="276" x2="206" y2="314" marker-end="url(#arrow-accent)"/>
+      <line class="flow-line" x1="594" y1="276" x2="594" y2="314" marker-end="url(#arrow-accent)"/>
+
+      <!-- ============ STAGE 3: WIKI-INGEST ============ -->
+      <text class="stage-label" x="20" y="302">WIKI-INGEST — SYNTHESIS &amp; ROUTING</text>
+
+      <rect class="box-rect" x="20" y="314" width="760" height="210" rx="4"/>
+      <text class="box-header" x="40" y="338">/wiki-ingest</text>
+      <text class="box-subhead" x="40" y="354">reads, classifies, synthesizes wiki pages, archives the source</text>
+
+      <!-- sub-step chips -->
+      <line class="side-line" x1="40" y1="384" x2="757" y2="384"/>
+      <rect class="chip-rect" x="40" y="368" width="137" height="32" rx="3"/>
+      <text class="chip-text" x="108.5" y="388" text-anchor="middle">Extract</text>
+      <rect class="chip-rect" x="185" y="368" width="137" height="32" rx="3"/>
+      <text class="chip-text" x="253.5" y="388" text-anchor="middle">Classify</text>
+      <rect class="chip-rect" x="330" y="368" width="137" height="32" rx="3"/>
+      <text class="chip-text" x="398.5" y="388" text-anchor="middle">Synthesize</text>
+      <rect class="chip-rect" x="475" y="368" width="137" height="32" rx="3"/>
+      <text class="chip-text" x="543.5" y="388" text-anchor="middle">Frontmatter</text>
+      <rect class="chip-rect" x="620" y="368" width="137" height="32" rx="3"/>
+      <text class="chip-text" x="688.5" y="388" text-anchor="middle">Move + log</text>
+
+      <!-- branch arrows -->
+      <path class="side-line" d="M 400,400 L 210,420" marker-end="url(#arrow-muted)"/>
+      <path class="side-line" d="M 400,400 L 590,420" marker-end="url(#arrow-muted)"/>
+      <text class="side-label" x="230" y="414">archives source</text>
+      <text class="side-label" x="470" y="414">if medium--*</text>
+
+      <!-- branch node: archive -->
+      <rect class="node-rect" x="40" y="420" width="340" height="52" rx="3"/>
+      <rect class="mono-chip-bg" x="54" y="430" width="270" height="16" rx="2"/>
+      <text class="mono-chip-text" x="60" y="442">staging_root/ingested/[subdir]/</text>
+      <text class="node-sub" x="54" y="464">The move is the atomic commit</text>
+
+      <!-- branch node: build_index -->
+      <rect class="node-rect" x="420" y="420" width="340" height="52" rx="3"/>
+      <rect class="mono-chip-bg" x="434" y="430" width="150" height="16" rx="2"/>
+      <text class="mono-chip-text" x="440" y="442">build_index.py</text>
+      <text class="node-sub" x="434" y="464">Regenerates URL → wiki-page index</text>
+
+      <!-- right note 2: TAXONOMY -->
+      <rect class="note-card" x="800" y="314" width="220" height="82" rx="3"/>
+      <rect class="note-bar-info" x="800" y="314" width="4" height="82"/>
+      <text class="note-title-info" x="816" y="332">TAXONOMY</text>
+      <text class="note-text" x="816" y="350">Routed by content + metadata:</text>
+      <text class="note-text" x="816" y="364">clippings · articles · papers ·</text>
+      <text class="note-text" x="816" y="378">documentation · data · notes</text>
+
+      <!-- right note 3: MEDIUM INDEX -->
+      <rect class="note-card" x="800" y="408" width="220" height="96" rx="3"/>
+      <rect class="note-bar-info" x="800" y="408" width="4" height="96"/>
+      <text class="note-title-info" x="816" y="426">MEDIUM INDEX</text>
+      <text class="note-text" x="816" y="444">Every medium--* batch writes</text>
+      <text class="note-text" x="816" y="458">two outputs: a local HTML table</text>
+      <text class="note-text" x="816" y="472">and a publishable wiki page —</text>
+      <text class="note-text" x="816" y="486">URL → wiki page it produced.</text>
+
+      <!-- arrow stage3 -> stage4 -->
+      <line class="flow-line" x1="400" y1="524" x2="400" y2="562" marker-end="url(#arrow-accent)"/>
+      <text class="flow-label" x="410" y="548">writes pages</text>
+
+      <!-- ============ STAGE 4: WIKI_ROOT ============ -->
+      <text class="stage-label" x="20" y="550">WIKI_ROOT — THE WIKI</text>
+
+      <rect class="box-rect" x="20" y="562" width="760" height="150" rx="4"/>
+      <text class="box-header" x="40" y="586">wiki_root/</text>
+      <text class="box-subhead" x="130" y="586">Obsidian vault — final, synthesised knowledge only</text>
+
+      <!-- domain tag strip -->
+      <rect class="tag-pill" x="40" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="77" y="616" text-anchor="middle">ai</text>
+      <rect class="tag-pill" x="120" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="157" y="616" text-anchor="middle">cpp</text>
+      <rect class="tag-pill" x="200" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="237" y="616" text-anchor="middle">python</text>
+      <rect class="tag-pill" x="280" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="317" y="616" text-anchor="middle">devops</text>
+      <rect class="tag-pill" x="360" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="397" y="616" text-anchor="middle">linux</text>
+      <rect class="tag-pill" x="440" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="477" y="616" text-anchor="middle">obsidian</text>
+      <rect class="tag-pill" x="520" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="557" y="616" text-anchor="middle">web</text>
+      <rect class="tag-pill" x="600" y="602" width="74" height="22" rx="10"/>
+      <text class="tag-text" x="637" y="616" text-anchor="middle">architecture</text>
+      <rect class="tag-pill" x="680" y="602" width="80" height="22" rx="10"/>
+      <text class="tag-text" x="720" y="616" text-anchor="middle">meta</text>
+
+      <!-- file chips -->
+      <rect class="chip-rect" x="40" y="640" width="150" height="28" rx="3"/>
+      <text class="mono-chip-text" x="115" y="659" text-anchor="middle">index.md</text>
+      <rect class="chip-rect" x="204" y="640" width="150" height="28" rx="3"/>
+      <text class="mono-chip-text" x="279" y="659" text-anchor="middle">log.md</text>
+      <rect class="chip-rect" x="368" y="640" width="150" height="28" rx="3"/>
+      <text class="mono-chip-text" x="443" y="659" text-anchor="middle">Overview.md</text>
+      <text class="node-sub" x="536" y="659">catalogue · audit trail · bootstrap</text>
+
+      <!-- right note 4: ALSO MAINTAINS -->
+      <rect class="note-card" x="800" y="562" width="220" height="112" rx="3"/>
+      <rect class="note-bar-info" x="800" y="562" width="4" height="112"/>
+      <text class="note-title-info" x="816" y="580">ALSO OPERATE HERE</text>
+      <text class="note-text" x="816" y="598">wiki-lint — broken links,</text>
+      <text class="note-text" x="816" y="611">orphans, stale index entries</text>
+      <text class="note-text" x="816" y="628">wiki-integrate — backlinks for</text>
+      <text class="note-text" x="816" y="641">pages made outside ingest</text>
+      <text class="note-text" x="816" y="658">wiki-crystallize — chat session</text>
+      <text class="note-text" x="816" y="671">→ wiki page</text>
+
+      <!-- arrow stage4 -> stage5 -->
+      <line class="flow-line" x1="400" y1="712" x2="400" y2="750" marker-end="url(#arrow-accent)"/>
+      <text class="flow-label" x="410" y="736">publish</text>
+
+      <!-- ============ STAGE 5: PUBLISH ============ -->
+      <text class="stage-label" x="20" y="738">PUBLISH</text>
+
+      <!-- sync-wiki.py -->
+      <rect class="node-rect" x="20" y="750" width="760" height="52" rx="3"/>
+      <rect class="mono-chip-bg" x="34" y="762" width="112" height="18" rx="2"/>
+      <text class="mono-chip-text" x="40" y="775">sync-wiki.py</text>
+      <text class="node-sub" x="160" y="775">converts wiki_root/*.md (except index.md, log.md) → Jekyll</text>
+
+      <line class="flow-line" x1="205" y1="802" x2="205" y2="822" marker-end="url(#arrow-accent)"/>
+      <line class="flow-line" x1="595" y1="802" x2="595" y2="822" marker-end="url(#arrow-accent)"/>
+
+      <!-- outputs -->
+      <rect class="node-rect" x="20" y="822" width="370" height="44" rx="3"/>
+      <text class="node-title-sm" x="34" y="842">_wiki/*.md</text>
+      <text class="node-sub" x="34" y="858">[[wikilinks]] → /wiki/&lt;slug&gt;/ links</text>
+
+      <rect class="node-rect" x="410" y="822" width="370" height="44" rx="3"/>
+      <text class="node-title-sm" x="424" y="842">_data/wiki_graph.json</text>
+      <text class="node-sub" x="424" y="858">nodes + edges for the graph page</text>
+
+      <line class="flow-line" x1="205" y1="866" x2="380" y2="886" marker-end="url(#arrow-accent)"/>
+      <line class="flow-line" x1="595" y1="866" x2="420" y2="886" marker-end="url(#arrow-accent)"/>
+
+      <!-- commit -->
+      <rect class="node-rect" x="20" y="886" width="760" height="44" rx="3"/>
+      <text class="node-title-sm" x="34" y="906">git commit + push</text>
+      <text class="node-sub" x="200" y="906">bharthu58.github.io repo, main branch</text>
+
+      <line class="flow-line" x1="400" y1="930" x2="400" y2="950" marker-end="url(#arrow-accent)"/>
+      <text class="flow-label" x="410" y="945">push</text>
+
+      <!-- actions -->
+      <rect class="node-rect" x="20" y="950" width="760" height="44" rx="3"/>
+      <text class="node-title-sm" x="34" y="970">GitHub Actions</text>
+      <text class="node-sub" x="180" y="970">html-proofer validates links, then deploys</text>
+
+      <line class="flow-line" x1="400" y1="994" x2="400" y2="1014" marker-end="url(#arrow-accent)"/>
+      <text class="flow-label" x="410" y="1009">deploy</text>
+
+      <!-- terminus -->
+      <rect class="terminus-rect" x="20" y="1014" width="760" height="52" rx="3"/>
+      <text class="terminus-text" x="34" y="1036">bharthu58.github.io</text>
+      <text class="terminus-sub" x="34" y="1054">Live public site</text>
+
+      <!-- right note 5: OPEN RISK -->
+      <rect class="note-card" x="800" y="750" width="220" height="118" rx="3"/>
+      <rect class="note-bar-risk" x="800" y="750" width="4" height="118"/>
+      <text class="note-title-risk" x="816" y="768">OPEN RISK</text>
+      <text class="note-text" x="816" y="786">sync-wiki.py has no folder</text>
+      <text class="note-text" x="816" y="800">exclusion — anything sitting in</text>
+      <text class="note-text" x="816" y="814">wiki_root, incl. unprocessed or</text>
+      <text class="note-text" x="816" y="828">personal notes, can be swept</text>
+      <text class="note-text" x="816" y="842">into a public push. Caught</text>
+      <text class="note-text" x="816" y="856">manually once; no durable fix yet.</text>
+    </svg>
+  </div>
+  <figcaption>Three capture sources feed two physically separate raw/ queues (agent repo vs. Obsidian vault); wiki-ingest scans both, synthesizes wiki pages, and archives sources as its atomic commit; wiki-publish then converts and pushes the vault to the live site.</figcaption>
+</figure>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--accent)"></span> Primary data flow</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--text-muted); opacity:0.6"></span> Conditional / branch step</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--fixed)"></span> Fixed this session</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--risk)"></span> Open, unresolved</div>
+</div>
+
+<footer>
+  Two roots throughout: <code>staging_root</code> = agent project repo (raw/, ingested/, archive/, tools/), <code>wiki_root</code> = Obsidian vault (final wiki pages, index.md, log.md). See <code>wiki-config.md</code> for both paths. The dual-<code>raw/</code> fix and the public/private-content risk were both surfaced on 2026-09-01 while ingesting a backlog of stale iPhone captures.
+</footer>

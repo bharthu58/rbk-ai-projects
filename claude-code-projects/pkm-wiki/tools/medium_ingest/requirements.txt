@@ -1,0 +1,6 @@
+playwright>=1.44
+trafilatura>=1.8
+markdownify>=0.13
+beautifulsoup4>=4.12
+anthropic>=0.30       # for LLM structuring (needs ANTHROPIC_API_KEY)
+aiofiles>=23.0
