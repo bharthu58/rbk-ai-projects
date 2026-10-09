@@ -1,0 +1,21 @@
+# Secrets / credentials — must never be committed (this repo is public)
+.env
+.env.*
+cookies.json
+# spotipy OAuth token cache (Bearer access token)
+.cache
+# hardcodes Spotify client credentials — parameterize via env before tracking
+tools/run_podcast.sh
+
+# Browser / session state
+.browser_profile/
+.playwright-mcp/
+
+# Caches
+__pycache__/
+*.pyc
+.pytest_cache/
+raw/.medium_cache.json
+
+# Local settings
+.claude/settings.local.json
